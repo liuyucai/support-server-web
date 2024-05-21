@@ -1,14 +1,45 @@
 import axios from "axios"
+import utils from '@/utils/common'
+
+import { mainStore } from '@/store/index'
+
+
 
 const service = axios.create({
-    baseURL: process.env.VUE_APP_BASE_URL,
+    baseURL: process.env.VUE_APP_SERVER_URL,
     timeout: 30000,
 })
 
 // 添加请求拦截器
 service.interceptors.request.use(
+
     function (config) {
+        // config.headers.common["X-Requested-With"] = "XMLHttpRequest";
         // 在发送请求之前做些什么
+
+        console.log("000000000000000000000000000000")
+        let mainStore1 = mainStore();
+
+        console.log(mainStore1.accessToken)
+
+        if(mainStore1.accessToken){
+            // config.headers.common['Authorization'] = 'bearer ' + mainStore1.accessToken;
+            config.headers['access-token'] = mainStore1.accessToken;
+        }
+
+        config.headers['clientId'] = process.env.VUE_APP_CLIENT_ID;
+
+        //处理post请求data对象空字段
+        if (config.data && config.method === 'post') {
+            let data = config.data
+            //分页特殊处理
+            if(data.page){
+                let condition = utils.filterEmpty(data.condition)
+                data.condition = condition
+            }
+        }
+
+
         return config
     },
     function (error) {
